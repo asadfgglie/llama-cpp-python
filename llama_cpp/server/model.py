@@ -157,6 +157,11 @@ class LlamaProxy:
                 chat_handler = llama_cpp.llama_chat_format.Llama3VisionAlpha(
                     clip_model_path=settings.clip_model_path, verbose=settings.verbose
                 )
+        elif settings.chat_format == 'banban-chat':
+            assert settings.clip_model_path is not None, "clip model not found"
+            chat_handler = llama_cpp.llama_chat_format.BanBanChat(
+                clip_model_path=settings.clip_model_path, verbose=settings.verbose
+            )
         elif settings.chat_format == "hf-autotokenizer":
             assert (
                 settings.hf_pretrained_model_name_or_path is not None

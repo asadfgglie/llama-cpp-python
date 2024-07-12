@@ -190,6 +190,7 @@ class ChatCompletionRequestSystemMessage(TypedDict):
 
 class ChatCompletionRequestUserMessage(TypedDict):
     role: Literal["user"]
+    name: NotRequired[str]
     content: Optional[Union[str, List[ChatCompletionRequestMessageContentPart]]]
 
 
@@ -214,6 +215,7 @@ class ChatCompletionRequestAssistantMessageFunctionCall(TypedDict):
 
 class ChatCompletionRequestAssistantMessage(TypedDict):
     role: Literal["assistant"]
+    name: NotRequired[str]
     content: Optional[str]
     tool_calls: NotRequired[ChatCompletionMessageToolCalls]
     function_call: NotRequired[
@@ -235,7 +237,6 @@ class ChatCompletionRequestFunctionMessage(TypedDict):
 
 ChatCompletionRequestMessage = Union[
     ChatCompletionRequestSystemMessage,
-    ChatCompletionRequestUserMessage,
     ChatCompletionRequestAssistantMessage,
     ChatCompletionRequestUserMessage,
     ChatCompletionRequestToolMessage,

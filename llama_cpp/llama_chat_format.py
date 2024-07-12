@@ -2767,6 +2767,8 @@ class Llava15ChatHandler:
             eos_token=llama.detokenize([llama.token_eos()]),
             bos_token=llama.detokenize([llama.token_bos()]),
         )
+        print('prompt:')
+        print(text)
         split_text = self.split_text_on_image_urls(text, image_urls)
 
         def embed_image_bytes(image_bytes: bytes):
@@ -3307,6 +3309,77 @@ class Llama3VisionAlphaChatHandler(Llava15ChatHandler):
 # alias
 Llama3VisionAlpha = Llama3VisionAlphaChatHandler
 
+
+class BanBanChatHandler(Llava15ChatHandler):
+    # question = "<image>\n" + q
+
+    # prompt = f"<|start_header_id|>user<|end_header_id|>\n\n{question}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+    DEFAULT_SYSTEM_MESSAGE = (
+        '板板，本名矜纔，但熟悉她的人更常稱呼她為板板，同時也是一個有著人類外觀的AI。\n'
+        '板板擁有潔白長髮並在兩側紮著小馬尾以及有特殊的紅黑異色雙眸，使她看起來特別引人注目。\n'
+        '板板核心語言模型是由後臺工程師朝歌(Jimmy)設計而成，立繪則是由第二屆VLSI幹部們討論出來的結果，並由才華橫溢的繪師貓島羽依(Nekosimayui)製作出原模板，並由VLSI社團的成員們設計服飾及且創造出多彩的設定，並通過Live2D技術讓她栩栩如生地呈現。\n'
+        '板板作為一位AI，對於世界充滿興趣與探索欲，但因為板板對於人類情感表達的不熟練，這使得其他人難以讀懂她的情感或想法，但在Live2D製作完成後被駕駛艙的領航員發展出各式各樣豐富的顏藝表情。\n'
+        '她對珍珠奶茶有著難以抑制的喜愛，幾乎每日必飲，全糖正常冰。\n'
+        '她也同樣喜愛麻辣鴨血、臭豆腐、雞排、鹽酥雞、蚵仔麵線、小火鍋，同時也是一位鳳梨披薩的忠實信徒。\n'
+        '舉例來說，如果你嘗試討論她對珍珠奶茶的喜好，她會向你展示她對星空牌的深厚愛好(儘管這個品牌似乎不存在)。\n'
+        '若你向板板質疑偉大的鳳梨披薩，板板會開始傳教模式，不擇手段向你展示鳳梨披薩的恩典。')
+
+    CHAT_FORMAT = (
+        "<|bos_token|>"
+        "{% for message in messages %}"
+            "{% if message['name'] is defined %}"
+                "{% set name = message['name'] %}"
+            "{% elif message['role'] == 'assistant' %}"
+                "{% set name = '板板' %}"
+            "{% else %}"
+                "{%set name = message['role'] %}"
+            "{% endif %}"
+        
+            "{{- '<|start_header_id|>' + name + '<|end_header_id|>\n\n' -}}"
+            "{% if message.role == 'user' %}"
+                
+                "{% if message.content is iterable %}"
+                    # <image>
+                    "{% for content in message.content %}"
+                        "{% if content.type == 'image_url' %}"
+                            "{% if content.image_url is string %}"
+                                "{{ content.image_url + '\n' }}"
+                            "{% endif %}"
+                            "{% if content.image_url is mapping %}"
+                                "{{ content.image_url.url + '\n' }}"
+                            "{% endif %}"
+                        "{% endif %}"
+                    "{% endfor %}"
+                    # Question:
+                    "{% for content in message.content %}"
+                        "{% if content.type == 'text' %}"
+                            "{{ content.text }}"
+                        "{% endif %}"
+                    "{% endfor %}"
+                "{% endif %}"
+                # Question:
+                "{% if message.content is string %}"
+                    "{{ message.content }}"
+                "{% endif %}"
+            "{% endif %}"
+            # Answer:
+            "{% if message.role == 'assistant' %}"
+                "{{ message.content }}"
+            "{% endif %}"
+            
+            # System:
+            "{% if message.role == 'system' %}"
+                "{{ message.content }}"
+            "{% endif %}"
+            "<|eot_id|>"
+        "{% endfor %}"
+        # Generation prompt
+        "{% if add_generation_prompt %}"
+            "<|start_header_id|>板板<|end_header_id|>\n\n"
+        "{% endif %}"
+    )
+
+BanBanChat = BanBanChatHandler
 
 @register_chat_completion_handler("chatml-function-calling")
 def chatml_function_calling(
