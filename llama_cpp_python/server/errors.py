@@ -16,7 +16,7 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 
-from llama_cpp.server.types import (
+from llama_cpp_python.server.types import (
     CreateCompletionRequest,
     CreateEmbeddingRequest,
     CreateChatCompletionRequest,
@@ -102,7 +102,7 @@ class ErrorResponseFormatters:
 class RouteErrorHandler(APIRoute):
     """Custom APIRoute that handles application errors and exceptions"""
 
-    # key: regex pattern for original error message from llama_cpp
+    # key: regex pattern for original error message from llama_cpp_python
     # value: formatter function
     pattern_and_formatters: Dict[
         "Pattern[str]",

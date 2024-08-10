@@ -8,7 +8,7 @@ from typing_extensions import Self
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 
-import llama_cpp
+import llama_cpp_python
 
 # Disable warning for model and model_alias settings
 BaseSettings.model_config["protected_namespaces"] = ()
@@ -31,7 +31,7 @@ class ModelSettings(BaseSettings):
         description="The number of layers to put on the GPU. The rest will be on the CPU. Set -1 to move all to GPU.",
     )
     split_mode: int = Field(
-        default=llama_cpp.LLAMA_SPLIT_MODE_LAYER,
+        default=llama_cpp_python.LLAMA_SPLIT_MODE_LAYER,
         description="The split mode to use.",
     )
     main_gpu: int = Field(
@@ -47,11 +47,11 @@ class ModelSettings(BaseSettings):
         default=False, description="Whether to only return the vocabulary."
     )
     use_mmap: bool = Field(
-        default=llama_cpp.llama_supports_mmap(),
+        default=llama_cpp_python.llama_supports_mmap(),
         description="Use mmap.",
     )
     use_mlock: bool = Field(
-        default=llama_cpp.llama_supports_mlock(),
+        default=llama_cpp_python.llama_supports_mlock(),
         description="Use mlock.",
     )
     kv_overrides: Optional[List[str]] = Field(
@@ -64,7 +64,7 @@ class ModelSettings(BaseSettings):
     )
     # Context Params
     seed: int = Field(
-        default=llama_cpp.LLAMA_DEFAULT_SEED, description="Random seed. -1 for random."
+        default=llama_cpp_python.LLAMA_DEFAULT_SEED, description="Random seed. -1 for random."
     )
     n_ctx: int = Field(default=2048, ge=0, description="The context size.")
     n_batch: int = Field(
@@ -81,7 +81,7 @@ class ModelSettings(BaseSettings):
         description="The number of threads to use when batch processing. Use -1 for max cpu threads",
     )
     rope_scaling_type: int = Field(
-        default=llama_cpp.LLAMA_ROPE_SCALING_TYPE_UNSPECIFIED
+        default=llama_cpp_python.LLAMA_ROPE_SCALING_TYPE_UNSPECIFIED
     )
     rope_freq_base: float = Field(default=0.0, description="RoPE base frequency")
     rope_freq_scale: float = Field(
@@ -97,6 +97,11 @@ class ModelSettings(BaseSettings):
     )
     logits_all: bool = Field(default=True, description="Whether to return logits.")
     embedding: bool = Field(default=False, description="Whether to use embeddings.")
+    is_hf_embedding_model: bool = Field(default=False, description='if embedding=True and is_hf_embedding_model=True, '
+                                                                   'it will use sentence_transformers to load model'
+                                                                   '(it will persist in memory, so do not use big model '
+                                                                   'if your memory is not big enough)')
+
     offload_kqv: bool = Field(
         default=True, description="Whether to offload kqv to the GPU."
     )

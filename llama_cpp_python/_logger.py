@@ -2,7 +2,7 @@ import sys
 import ctypes
 import logging
 
-import llama_cpp
+import llama_cpp_python
 
 # enum ggml_log_level {
 #     GGML_LOG_LEVEL_ERROR = 2,
@@ -20,7 +20,7 @@ GGML_LOG_LEVEL_TO_LOGGING_LEVEL = {
 logger = logging.getLogger("llama-cpp-python")
 
 
-@llama_cpp.llama_log_callback
+@llama_cpp_python.llama_log_callback
 def llama_log_callback(
     level: int,
     text: bytes,
@@ -30,7 +30,7 @@ def llama_log_callback(
         print(text.decode("utf-8"), end="", flush=True, file=sys.stderr)
 
 
-llama_cpp.llama_log_set(llama_log_callback, ctypes.c_void_p(0))
+llama_cpp_python.llama_log_set(llama_log_callback, ctypes.c_void_p(0))
 
 
 def set_verbose(verbose: bool):

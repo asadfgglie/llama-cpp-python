@@ -22,7 +22,7 @@ from typing import (
     overload,
 )
 
-import llama_cpp.llama_cpp as llama_cpp
+import llama_cpp_python.llama_cpp as llama_cpp
 
 # Type aliases
 llama_grammar_element = llama_cpp.llama_grammar_element

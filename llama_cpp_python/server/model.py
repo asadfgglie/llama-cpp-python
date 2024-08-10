@@ -4,11 +4,11 @@ import json
 
 from typing import Dict, Optional, Union, List
 
-import llama_cpp
-import llama_cpp.llama_speculative as llama_speculative
-import llama_cpp.llama_tokenizer as llama_tokenizer
+import llama_cpp_python
+import llama_cpp_python.llama_speculative as llama_speculative
+import llama_cpp_python.llama_tokenizer as llama_tokenizer
 
-from llama_cpp.server.settings import ModelSettings
+from llama_cpp_python.server.settings import ModelSettings
 
 
 class LlamaProxy:
@@ -21,7 +21,7 @@ class LlamaProxy:
                 model.model_alias = model.model
             self._model_settings_dict[model.model_alias] = model
 
-        self._current_model: Optional[llama_cpp.Llama] = None
+        self._current_model: Optional[llama_cpp_python.Llama] = None
         self._current_model_alias: Optional[str] = None
 
         self._default_model_settings: ModelSettings = models[0]
@@ -33,7 +33,7 @@ class LlamaProxy:
         )
         self._current_model_alias = self._default_model_alias
 
-    def __call__(self, model: Optional[str] = None) -> llama_cpp.Llama:
+    def __call__(self, model: Optional[str] = None) -> llama_cpp_python.Llama:
         if model is None:
             model = self._default_model_alias
 
@@ -71,95 +71,95 @@ class LlamaProxy:
             del self._current_model
 
     @staticmethod
-    def load_llama_from_model_settings(settings: ModelSettings) -> llama_cpp.Llama:
+    def load_llama_from_model_settings(settings: ModelSettings) -> llama_cpp_python.Llama:
         chat_handler = None
         if settings.chat_format == "llava-1-5":
             assert settings.clip_model_path is not None, "clip model not found"
             if settings.hf_model_repo_id is not None:
                 chat_handler = (
-                    llama_cpp.llama_chat_format.Llava15ChatHandler.from_pretrained(
+                    llama_cpp_python.llama_chat_format.Llava15ChatHandler.from_pretrained(
                         repo_id=settings.hf_model_repo_id,
                         filename=settings.clip_model_path,
                         verbose=settings.verbose,
                     )
                 )
             else:
-                chat_handler = llama_cpp.llama_chat_format.Llava15ChatHandler(
+                chat_handler = llama_cpp_python.llama_chat_format.Llava15ChatHandler(
                     clip_model_path=settings.clip_model_path, verbose=settings.verbose
                 )
         elif settings.chat_format == "obsidian":
             assert settings.clip_model_path is not None, "clip model not found"
             if settings.hf_model_repo_id is not None:
                 chat_handler = (
-                    llama_cpp.llama_chat_format.ObsidianChatHandler.from_pretrained(
+                    llama_cpp_python.llama_chat_format.ObsidianChatHandler.from_pretrained(
                         repo_id=settings.hf_model_repo_id,
                         filename=settings.clip_model_path,
                         verbose=settings.verbose,
                     )
                 )
             else:
-                chat_handler = llama_cpp.llama_chat_format.ObsidianChatHandler(
+                chat_handler = llama_cpp_python.llama_chat_format.ObsidianChatHandler(
                     clip_model_path=settings.clip_model_path, verbose=settings.verbose
                 )
         elif settings.chat_format == "llava-1-6":
             assert settings.clip_model_path is not None, "clip model not found"
             if settings.hf_model_repo_id is not None:
                 chat_handler = (
-                    llama_cpp.llama_chat_format.Llava16ChatHandler.from_pretrained(
+                    llama_cpp_python.llama_chat_format.Llava16ChatHandler.from_pretrained(
                         repo_id=settings.hf_model_repo_id,
                         filename=settings.clip_model_path,
                         verbose=settings.verbose,
                     )
                 )
             else:
-                chat_handler = llama_cpp.llama_chat_format.Llava16ChatHandler(
+                chat_handler = llama_cpp_python.llama_chat_format.Llava16ChatHandler(
                     clip_model_path=settings.clip_model_path, verbose=settings.verbose
                 )
         elif settings.chat_format == "moondream":
             assert settings.clip_model_path is not None, "clip model not found"
             if settings.hf_model_repo_id is not None:
                 chat_handler = (
-                    llama_cpp.llama_chat_format.MoondreamChatHandler.from_pretrained(
+                    llama_cpp_python.llama_chat_format.MoondreamChatHandler.from_pretrained(
                         repo_id=settings.hf_model_repo_id,
                         filename=settings.clip_model_path,
                         verbose=settings.verbose,
                     )
                 )
             else:
-                chat_handler = llama_cpp.llama_chat_format.MoondreamChatHandler(
+                chat_handler = llama_cpp_python.llama_chat_format.MoondreamChatHandler(
                     clip_model_path=settings.clip_model_path, verbose=settings.verbose
                 )
         elif settings.chat_format == "nanollava":
             assert settings.clip_model_path is not None, "clip model not found"
             if settings.hf_model_repo_id is not None:
                 chat_handler = (
-                    llama_cpp.llama_chat_format.NanoLlavaChatHandler.from_pretrained(
+                    llama_cpp_python.llama_chat_format.NanoLlavaChatHandler.from_pretrained(
                         repo_id=settings.hf_model_repo_id,
                         filename=settings.clip_model_path,
                         verbose=settings.verbose,
                     )
                 )
             else:
-                chat_handler = llama_cpp.llama_chat_format.NanoLlavaChatHandler(
+                chat_handler = llama_cpp_python.llama_chat_format.NanoLlavaChatHandler(
                     clip_model_path=settings.clip_model_path, verbose=settings.verbose
                 )
         elif settings.chat_format == "llama-3-vision-alpha":
             assert settings.clip_model_path is not None, "clip model not found"
             if settings.hf_model_repo_id is not None:
                 chat_handler = (
-                    llama_cpp.llama_chat_format.Llama3VisionAlpha.from_pretrained(
+                    llama_cpp_python.llama_chat_format.Llama3VisionAlpha.from_pretrained(
                         repo_id=settings.hf_model_repo_id,
                         filename=settings.clip_model_path,
                         verbose=settings.verbose,
                     )
                 )
             else:
-                chat_handler = llama_cpp.llama_chat_format.Llama3VisionAlpha(
+                chat_handler = llama_cpp_python.llama_chat_format.Llama3VisionAlpha(
                     clip_model_path=settings.clip_model_path, verbose=settings.verbose
                 )
         elif settings.chat_format == 'banban-chat':
             assert settings.clip_model_path is not None, "clip model not found"
-            chat_handler = llama_cpp.llama_chat_format.BanBanChat(
+            chat_handler = llama_cpp_python.llama_chat_format.BanBanChat(
                 clip_model_path=settings.clip_model_path, verbose=settings.verbose
             )
         elif settings.chat_format == "hf-autotokenizer":
@@ -167,7 +167,7 @@ class LlamaProxy:
                 settings.hf_pretrained_model_name_or_path is not None
             ), "hf_pretrained_model_name_or_path must be set for hf-autotokenizer"
             chat_handler = (
-                llama_cpp.llama_chat_format.hf_autotokenizer_to_chat_completion_handler(
+                llama_cpp_python.llama_chat_format.hf_autotokenizer_to_chat_completion_handler(
                     settings.hf_pretrained_model_name_or_path
                 )
             )
@@ -175,11 +175,11 @@ class LlamaProxy:
             assert (
                 settings.hf_tokenizer_config_path is not None
             ), "hf_tokenizer_config_path must be set for hf-tokenizer-config"
-            chat_handler = llama_cpp.llama_chat_format.hf_tokenizer_config_to_chat_completion_handler(
+            chat_handler = llama_cpp_python.llama_chat_format.hf_tokenizer_config_to_chat_completion_handler(
                 json.load(open(settings.hf_tokenizer_config_path))
             )
 
-        tokenizer: Optional[llama_cpp.BaseLlamaTokenizer] = None
+        tokenizer: Optional[llama_cpp_python.BaseLlamaTokenizer] = None
         if settings.hf_pretrained_model_name_or_path is not None:
             tokenizer = llama_tokenizer.LlamaHFTokenizer.from_pretrained(
                 settings.hf_pretrained_model_name_or_path
@@ -216,12 +216,12 @@ class LlamaProxy:
 
         if settings.hf_model_repo_id is not None:
             create_fn = functools.partial(
-                llama_cpp.Llama.from_pretrained,
+                llama_cpp_python.Llama.from_pretrained,
                 repo_id=settings.hf_model_repo_id,
                 filename=settings.model,
             )
         else:
-            create_fn = llama_cpp.Llama
+            create_fn = llama_cpp_python.Llama
             kwargs["model_path"] = settings.model
 
         _model = create_fn(
@@ -278,10 +278,10 @@ class LlamaProxy:
             if settings.cache_type == "disk":
                 if settings.verbose:
                     print(f"Using disk cache with size {settings.cache_size}")
-                cache = llama_cpp.LlamaDiskCache(capacity_bytes=settings.cache_size)
+                cache = llama_cpp_python.LlamaDiskCache(capacity_bytes=settings.cache_size)
             else:
                 if settings.verbose:
                     print(f"Using ram cache with size {settings.cache_size}")
-                cache = llama_cpp.LlamaRAMCache(capacity_bytes=settings.cache_size)
+                cache = llama_cpp_python.LlamaRAMCache(capacity_bytes=settings.cache_size)
             _model.set_cache(cache)
         return _model

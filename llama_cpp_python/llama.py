@@ -38,10 +38,10 @@ from .llama_cache import (
     LlamaRAMCache,  # type: ignore
 )
 from .llama_tokenizer import BaseLlamaTokenizer, LlamaTokenizer
-import llama_cpp.llama_cpp as llama_cpp
-import llama_cpp.llama_chat_format as llama_chat_format
+import llama_cpp_python.llama_cpp as llama_cpp
+import llama_cpp_python.llama_chat_format as llama_chat_format
 
-from llama_cpp.llama_speculative import LlamaDraftModel
+from llama_cpp_python.llama_speculative import LlamaDraftModel
 
 import numpy as np
 import numpy.typing as npt
@@ -128,8 +128,8 @@ class Llama:
         Examples:
             Basic usage
 
-            >>> import llama_cpp
-            >>> model = llama_cpp.Llama(
+            >>> import llama_cpp_python
+            >>> model = llama_cpp_python.Llama(
             ...     model_path="path/to/model",
             ... )
             >>> print(model("The quick brown fox jumps ", stop=["."])["choices"][0]["text"])
@@ -137,8 +137,8 @@ class Llama:
 
             Loading a chat model
 
-            >>> import llama_cpp
-            >>> model = llama_cpp.Llama(
+            >>> import llama_cpp_python
+            >>> model = llama_cpp_python.Llama(
             ...     model_path="path/to/model",
             ...     chat_format="llama-2",
             ... )

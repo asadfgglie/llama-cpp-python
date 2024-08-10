@@ -1,4 +1,4 @@
-import llama_cpp
+import llama_cpp_python
 import json
 
 tree = """
@@ -9,7 +9,7 @@ root ::= node
 
 
 def test_grammar_from_string():
-    grammar = llama_cpp.LlamaGrammar.from_string(tree)
+    grammar = llama_cpp_python.LlamaGrammar.from_string(tree)
     assert grammar._n_rules == 3
     assert grammar._start_rule_index == 2
     assert grammar.grammar is not None
@@ -47,7 +47,7 @@ def test_composed_pydantic_grammar():
         "type": "object",
     }
 
-    grammar = llama_cpp.LlamaGrammar.from_json_schema(json.dumps(schema))
+    grammar = llama_cpp_python.LlamaGrammar.from_json_schema(json.dumps(schema))
 
     assert grammar.grammar is not None
 
@@ -73,6 +73,6 @@ def test_grammar_anyof():
         "type": "object",
     }
 
-    grammar = llama_cpp.LlamaGrammar.from_json_schema(json.dumps(sch))
+    grammar = llama_cpp_python.LlamaGrammar.from_json_schema(json.dumps(sch))
 
     assert grammar.grammar is not None

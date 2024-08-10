@@ -9,26 +9,26 @@ export MODEL=../models/7B/...
 
 Then run:
 ```
-uvicorn --factory llama_cpp.server.app:create_app --reload
+uvicorn --factory llama_cpp_python.server.app:create_app --reload
 ```
 
 or
 
 ```
-python3 -m llama_cpp.server
+python3 -m llama_cpp_python.server
 ```
 
 Then visit http://localhost:8000/docs to see the interactive API docs.
 
 
-To actually see the implementation of the server, see llama_cpp/server/app.py
+To actually see the implementation of the server, see llama_cpp_python/server/app.py
 
 """
 
 import os
 import uvicorn
 
-from llama_cpp.server.app import create_app
+from llama_cpp_python.server.app import create_app
 
 if __name__ == "__main__":
     app = create_app()

@@ -19,7 +19,7 @@ from .llama_types import *
 from .llama_grammar import LlamaGrammar
 from ._utils import suppress_stdout_stderr
 
-import llama_cpp.llama_cpp as llama_cpp
+import llama_cpp_python.llama_cpp as llama_cpp
 
 
 # Python wrappers over llama.h structs
@@ -386,7 +386,7 @@ class _LlamaContext:
     def sample_repetition_penalties(
         self,
         candidates: "_LlamaTokenDataArray",
-        last_tokens_data: "llama_cpp.Array[llama_cpp.llama_token]",
+        last_tokens_data: "llama_cpp_python.Array[llama_cpp_python.llama_token]",
         penalty_last_n: int,
         penalty_repeat: float,
         penalty_freq: float,

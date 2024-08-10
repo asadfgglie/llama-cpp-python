@@ -2,7 +2,7 @@ from starlette.requests import Request
 from typing import Dict
 from ray import serve
 from ray.serve import Application
-from llama_cpp import Llama
+from llama_cpp_python import Llama
 
 
 @serve.deployment

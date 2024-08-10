@@ -41,7 +41,7 @@ plugins:
             - https://numpy.org/doc/stable/objects.inv
 
 watch:
-  - llama_cpp
+  - llama_cpp_python
   - README.md
 
 nav:

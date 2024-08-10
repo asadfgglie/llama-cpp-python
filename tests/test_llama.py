@@ -4,13 +4,13 @@ import numpy as np
 import pytest
 from scipy.special import log_softmax
 
-import llama_cpp
+import llama_cpp_python
 
 MODEL = "./vendor/llama.cpp/models/ggml-vocab-llama-spm.gguf"
 
 
 def test_llama_cpp_tokenization():
-    llama = llama_cpp.Llama(model_path=MODEL, vocab_only=True, verbose=False)
+    llama = llama_cpp_python.Llama(model_path=MODEL, vocab_only=True, verbose=False)
 
     assert llama
     assert llama._ctx.ctx is not None
@@ -48,7 +48,7 @@ def test_llama_cpp_tokenization():
 
 @pytest.fixture
 def mock_llama(monkeypatch):
-    def setup_mock(llama: llama_cpp.Llama, output_text: str):
+    def setup_mock(llama: llama_cpp_python.Llama, output_text: str):
         n_ctx = llama.n_ctx()
         n_vocab = llama.n_vocab()
         output_tokens = llama.tokenize(
@@ -64,7 +64,7 @@ def mock_llama(monkeypatch):
         n = 0
         last_n_tokens = 0
 
-        def mock_decode(ctx: llama_cpp.llama_context_p, batch: llama_cpp.llama_batch):
+        def mock_decode(ctx: llama_cpp_python.llama_context_p, batch: llama_cpp_python.llama_batch):
             # Test some basic invariants of this mocking technique
             assert ctx == llama._ctx.ctx, "context does not match mock_llama"
             assert batch.n_tokens > 0, "no tokens in batch"
@@ -84,7 +84,7 @@ def mock_llama(monkeypatch):
             last_n_tokens = batch.n_tokens
             return 0
 
-        def mock_get_logits(ctx: llama_cpp.llama_context_p):
+        def mock_get_logits(ctx: llama_cpp_python.llama_context_p):
             # Test some basic invariants of this mocking technique
             assert ctx == llama._ctx.ctx, "context does not match mock_llama"
             assert n > 0, "mock_llama_decode not called"
@@ -95,66 +95,66 @@ def mock_llama(monkeypatch):
                 + (n - last_n_tokens) * n_vocab * ctypes.sizeof(ctypes.c_float)
             )
 
-        monkeypatch.setattr("llama_cpp.llama_cpp.llama_decode", mock_decode)
-        monkeypatch.setattr("llama_cpp.llama_cpp.llama_get_logits", mock_get_logits)
+        monkeypatch.setattr("llama_cpp_python.llama_cpp_python.llama_decode", mock_decode)
+        monkeypatch.setattr("llama_cpp_python.llama_cpp_python.llama_get_logits", mock_get_logits)
 
-        def mock_kv_cache_clear(ctx: llama_cpp.llama_context_p):
+        def mock_kv_cache_clear(ctx: llama_cpp_python.llama_context_p):
             # Test some basic invariants of this mocking technique
             assert ctx == llama._ctx.ctx, "context does not match mock_llama"
             return
 
         def mock_kv_cache_seq_rm(
-            ctx: llama_cpp.llama_context_p,
-            seq_id: llama_cpp.llama_seq_id,
-            pos0: llama_cpp.llama_pos,
-            pos1: llama_cpp.llama_pos,
+            ctx: llama_cpp_python.llama_context_p,
+            seq_id: llama_cpp_python.llama_seq_id,
+            pos0: llama_cpp_python.llama_pos,
+            pos1: llama_cpp_python.llama_pos,
         ):
             # Test some basic invariants of this mocking technique
             assert ctx == llama._ctx.ctx, "context does not match mock_llama"
             return
 
         def mock_kv_cache_seq_cp(
-            ctx: llama_cpp.llama_context_p,
-            seq_id_src: llama_cpp.llama_seq_id,
-            seq_id_dst: llama_cpp.llama_seq_id,
-            pos0: llama_cpp.llama_pos,
-            pos1: llama_cpp.llama_pos,
+            ctx: llama_cpp_python.llama_context_p,
+            seq_id_src: llama_cpp_python.llama_seq_id,
+            seq_id_dst: llama_cpp_python.llama_seq_id,
+            pos0: llama_cpp_python.llama_pos,
+            pos1: llama_cpp_python.llama_pos,
         ):
             # Test some basic invariants of this mocking technique
             assert ctx == llama._ctx.ctx, "context does not match mock_llama"
             return
     
         def mock_kv_cache_seq_keep(
-            ctx: llama_cpp.llama_context_p,
-            seq_id: llama_cpp.llama_seq_id,
+            ctx: llama_cpp_python.llama_context_p,
+            seq_id: llama_cpp_python.llama_seq_id,
         ):
             # Test some basic invariants of this mocking technique
             assert ctx == llama._ctx.ctx, "context does not match mock_llama"
             return
 
         def mock_kv_cache_seq_add(
-            ctx: llama_cpp.llama_context_p,
-            seq_id: llama_cpp.llama_seq_id,
-            pos0: llama_cpp.llama_pos,
-            pos1: llama_cpp.llama_pos,
+            ctx: llama_cpp_python.llama_context_p,
+            seq_id: llama_cpp_python.llama_seq_id,
+            pos0: llama_cpp_python.llama_pos,
+            pos1: llama_cpp_python.llama_pos,
         ):
             # Test some basic invariants of this mocking technique
             assert ctx == llama._ctx.ctx, "context does not match mock_llama"
             return
 
-        monkeypatch.setattr("llama_cpp.llama_cpp.llama_kv_cache_clear", mock_kv_cache_clear)
-        monkeypatch.setattr("llama_cpp.llama_cpp.llama_kv_cache_seq_rm", mock_kv_cache_seq_rm)
-        monkeypatch.setattr("llama_cpp.llama_cpp.llama_kv_cache_seq_cp", mock_kv_cache_seq_cp)
-        monkeypatch.setattr("llama_cpp.llama_cpp.llama_kv_cache_seq_keep", mock_kv_cache_seq_keep)
-        monkeypatch.setattr("llama_cpp.llama_cpp.llama_kv_cache_seq_add", mock_kv_cache_seq_add)
+        monkeypatch.setattr("llama_cpp_python.llama_cpp_python.llama_kv_cache_clear", mock_kv_cache_clear)
+        monkeypatch.setattr("llama_cpp_python.llama_cpp_python.llama_kv_cache_seq_rm", mock_kv_cache_seq_rm)
+        monkeypatch.setattr("llama_cpp_python.llama_cpp_python.llama_kv_cache_seq_cp", mock_kv_cache_seq_cp)
+        monkeypatch.setattr("llama_cpp_python.llama_cpp_python.llama_kv_cache_seq_keep", mock_kv_cache_seq_keep)
+        monkeypatch.setattr("llama_cpp_python.llama_cpp_python.llama_kv_cache_seq_add", mock_kv_cache_seq_add)
 
     return setup_mock
 
 
 def test_llama_patch(mock_llama):
     n_ctx = 128
-    llama = llama_cpp.Llama(model_path=MODEL, vocab_only=True, n_ctx=n_ctx)
-    n_vocab = llama_cpp.llama_n_vocab(llama._model.model)
+    llama = llama_cpp_python.Llama(model_path=MODEL, vocab_only=True, n_ctx=n_ctx)
+    n_vocab = llama_cpp_python.llama_n_vocab(llama._model.model)
     assert n_vocab == 32000
 
     text = "The quick brown fox"
@@ -213,7 +213,7 @@ def test_llama_pickle():
     import tempfile
 
     fp = tempfile.TemporaryFile()
-    llama = llama_cpp.Llama(model_path=MODEL, vocab_only=True)
+    llama = llama_cpp_python.Llama(model_path=MODEL, vocab_only=True)
     pickle.dump(llama, fp)
     fp.seek(0)
     llama = pickle.load(fp)
@@ -227,7 +227,7 @@ def test_llama_pickle():
 
 
 def test_utf8(mock_llama):
-    llama = llama_cpp.Llama(model_path=MODEL, vocab_only=True, logits_all=True)
+    llama = llama_cpp_python.Llama(model_path=MODEL, vocab_only=True, logits_all=True)
 
     output_text = "😀"
 
@@ -244,7 +244,7 @@ def test_utf8(mock_llama):
 
 def test_llama_server():
     from fastapi.testclient import TestClient
-    from llama_cpp.server.app import create_app, Settings
+    from llama_cpp_python.server.app import create_app, Settings
 
     settings = Settings(
         model=MODEL,
@@ -282,7 +282,7 @@ def test_logits_to_logprobs(size_and_axis, convert_to_list: bool, atol: float = 
     if convert_to_list:
         # Currently, logits are converted from arrays to lists. This may change soon
         logits = logits.tolist()
-    log_probs = llama_cpp.Llama.logits_to_logprobs(logits, axis=axis)
+    log_probs = llama_cpp_python.Llama.logits_to_logprobs(logits, axis=axis)
     log_probs_correct = log_softmax(logits, axis=axis)
     assert log_probs.dtype == np.single
     assert log_probs.shape == size
@@ -290,4 +290,4 @@ def test_logits_to_logprobs(size_and_axis, convert_to_list: bool, atol: float = 
 
 
 def test_llama_cpp_version():
-    assert llama_cpp.__version__
+    assert llama_cpp_python.__version__

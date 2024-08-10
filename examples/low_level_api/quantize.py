@@ -1,6 +1,6 @@
 import os
 import argparse
-import llama_cpp
+import llama_cpp_python
 
 
 def main(args):
@@ -11,9 +11,9 @@ def main(args):
     if os.path.exists(fname_out):
         raise RuntimeError(f"Output file already exists ({fname_out})")
     ftype = args.type
-    args = llama_cpp.llama_model_quantize_default_params()
+    args = llama_cpp_python.llama_model_quantize_default_params()
     args.ftype = ftype
-    return_code = llama_cpp.llama_model_quantize(fname_inp, fname_out, args)
+    return_code = llama_cpp_python.llama_model_quantize(fname_inp, fname_out, args)
     if return_code != 0:
         raise RuntimeError("Failed to quantize model")
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "type",
         type=int,
-        help="Type of quantization (2: q4_0, 3: q4_1), see llama_cpp.py for enum",
+        help="Type of quantization (2: q4_0, 3: q4_1), see llama_cpp_python.py for enum",
     )
     args = parser.parse_args()
     main(args)

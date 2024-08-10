@@ -1,37 +1,40 @@
 from __future__ import annotations
 
-import os
-import json
-import typing
 import contextlib
-
-from threading import Lock
+import json
+import logging
+import os
+import typing
 from functools import partial
+from threading import Lock
 from typing import Iterator, List, Optional, Union, Dict
 
-import llama_cpp
-
 import anyio
+import numpy as np
+import torch.cuda
 from anyio.streams.memory import MemoryObjectSendStream
-from starlette.concurrency import run_in_threadpool, iterate_in_threadpool
 from fastapi import Depends, FastAPI, APIRouter, Request, HTTPException, status, Body
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
+from sentence_transformers import SentenceTransformer
 from sse_starlette.sse import EventSourceResponse
-from starlette_context.plugins import RequestIdPlugin  # type: ignore
+from starlette.concurrency import run_in_threadpool, iterate_in_threadpool
 from starlette_context.middleware import RawContextMiddleware
+from starlette_context.plugins import RequestIdPlugin  # type: ignore
 
-from llama_cpp.server.model import (
+import llama_cpp_python
+from llama_cpp_python.server.errors import RouteErrorHandler
+from llama_cpp_python.server.model import (
     LlamaProxy,
 )
-from llama_cpp.server.settings import (
+from llama_cpp_python.server.settings import (
     ConfigFileSettings,
     Settings,
     ModelSettings,
     ServerSettings,
 )
-from llama_cpp.server.types import (
+from llama_cpp_python.server.types import (
     CreateCompletionRequest,
     CreateEmbeddingRequest,
     CreateChatCompletionRequest,
@@ -42,12 +45,12 @@ from llama_cpp.server.types import (
     DetokenizeInputRequest,
     DetokenizeInputResponse,
 )
-from llama_cpp.server.errors import RouteErrorHandler
-
 
 router = APIRouter(route_class=RouteErrorHandler)
 
 _server_settings: Optional[ServerSettings] = None
+_model_settings: Optional[List[ModelSettings]] = None
+hf_embedding_model: dict[str, SentenceTransformer] = dict()
 
 
 def set_server_settings(server_settings: ServerSettings):
@@ -97,6 +100,11 @@ def set_ping_message_factory(factory: typing.Callable[[], bytes]):
     _ping_message_factory = factory
 
 
+def set_model_settings(model_settings: List[ModelSettings]):
+    global _model_settings
+    _model_settings = model_settings
+
+
 def create_app(
     settings: Settings | None = None,
     server_settings: ServerSettings | None = None,
@@ -130,11 +138,12 @@ def create_app(
     ), "server_settings and model_settings must be provided together"
 
     set_server_settings(server_settings)
+    set_model_settings(model_settings)
     middleware = [Middleware(RawContextMiddleware, plugins=(RequestIdPlugin(),))]
     app = FastAPI(
         middleware=middleware,
         title="🦙 llama.cpp Python API",
-        version=llama_cpp.__version__,
+        version=llama_cpp_python.__version__,
         root_path=server_settings.root_path,
     )
     app.add_middleware(
@@ -186,7 +195,7 @@ async def get_event_publisher(
 
 
 def _logit_bias_tokens_to_input_ids(
-    llama: llama_cpp.Llama,
+    llama: llama_cpp_python.Llama,
     logit_bias: Dict[str, float],
 ) -> Dict[str, float]:
     to_bias: Dict[str, float] = {}
@@ -229,7 +238,7 @@ openai_v1_tag = "OpenAI V1"
     summary="Completion",
     dependencies=[Depends(authenticate)],
     response_model=Union[
-        llama_cpp.CreateCompletionResponse,
+        llama_cpp_python.CreateCompletionResponse,
         str,
     ],
     responses={
@@ -266,7 +275,7 @@ openai_v1_tag = "OpenAI V1"
 async def create_completion(
     request: Request,
     body: CreateCompletionRequest,
-) -> llama_cpp.Completion:
+) -> llama_cpp_python.Completion:
     exit_stack = contextlib.ExitStack()
     llama_proxy = await run_in_threadpool(
         lambda: exit_stack.enter_context(contextlib.contextmanager(get_llama_proxy)())
@@ -303,11 +312,11 @@ async def create_completion(
         )
 
     if body.grammar is not None:
-        kwargs["grammar"] = llama_cpp.LlamaGrammar.from_string(body.grammar)
+        kwargs["grammar"] = llama_cpp_python.LlamaGrammar.from_string(body.grammar)
 
     if body.min_tokens > 0:
-        _min_tokens_logits_processor = llama_cpp.LogitsProcessorList(
-            [llama_cpp.MinTokensLogitsProcessor(body.min_tokens, llama.token_eos())]
+        _min_tokens_logits_processor = llama_cpp_python.LogitsProcessorList(
+            [llama_cpp_python.MinTokensLogitsProcessor(body.min_tokens, llama.token_eos())]
         )
         if "logits_processor" not in kwargs:
             kwargs["logits_processor"] = _min_tokens_logits_processor
@@ -315,8 +324,8 @@ async def create_completion(
             kwargs["logits_processor"].extend(_min_tokens_logits_processor)
 
     iterator_or_completion: Union[
-        llama_cpp.CreateCompletionResponse,
-        Iterator[llama_cpp.CreateCompletionStreamResponse],
+        llama_cpp_python.CreateCompletionResponse,
+        Iterator[llama_cpp_python.CreateCompletionStreamResponse],
     ] = await run_in_threadpool(llama, **kwargs)
 
     if isinstance(iterator_or_completion, Iterator):
@@ -325,7 +334,7 @@ async def create_completion(
 
         # If no exception was raised from first_response, we can assume that
         # the iterator is valid and we can use it to stream the response.
-        def iterator() -> Iterator[llama_cpp.CreateCompletionStreamResponse]:
+        def iterator() -> Iterator[llama_cpp_python.CreateCompletionStreamResponse]:
             yield first_response
             yield from iterator_or_completion
             exit_stack.close()
@@ -357,17 +366,53 @@ async def create_embedding(
     request: CreateEmbeddingRequest,
     llama_proxy: LlamaProxy = Depends(get_llama_proxy),
 ):
-    return await run_in_threadpool(
-        llama_proxy(request.model).create_embedding,
-        **request.model_dump(exclude={"user"}),
-    )
+    setting = None
+    for model in _model_settings:
+        if request.model is None and model.embedding: # if no specify model, use first embedding model
+            setting = model
+            break
+        elif model.embedding and (request.model == model.model or request.model == model.model_alias):
+            setting = model
+            break
+    if setting is None:
+        raise ValueError('no embedding model or no match correct embedding model name. use embedding=True to note embedding model')
+
+    if setting.is_hf_embedding_model:
+        if setting.model not in hf_embedding_model:
+            logging.info(f'load {setting.model}')
+            hf_embedding_model[setting.model] = SentenceTransformer(setting.model, device='cpu' if setting.n_ctx != -1 else None)
+        model = hf_embedding_model[setting.model]
+        embeds: np.ndarray = model.encode(request.input if isinstance(request.input, list) else [request.input], normalize_embeddings=True)
+        data = [
+            {
+                "object": "embedding",
+                "embedding": emb.tolist(),
+                "index": idx,
+            }
+            for (idx, emb) in enumerate(embeds)
+        ]
+        total_tokens = model.tokenize(request.input if isinstance(request.input, list) else [request.input])['attention_mask'].sum().item()
+        return {
+            "object": "list",
+            "data": data,
+            "model": setting.model_alias if setting.model_alias is not None else setting.model,
+            "usage": {
+                "prompt_tokens": total_tokens,
+                "total_tokens": total_tokens,
+            },
+        }
+    else:
+        return await run_in_threadpool(
+            llama_proxy(request.model).create_embedding,
+            **request.model_dump(exclude={"user"}),
+        )
 
 
 @router.post(
     "/v1/chat/completions",
     summary="Chat",
     dependencies=[Depends(authenticate)],
-    response_model=Union[llama_cpp.ChatCompletion, str],
+    response_model=Union[llama_cpp_python.ChatCompletion, str],
     responses={
         "200": {
             "description": "Successful Response",
@@ -467,7 +512,7 @@ async def create_chat_completion(
             },
         }
     ),
-) -> llama_cpp.ChatCompletion:
+) -> EventSourceResponse:
     # This is a workaround for an issue in FastAPI dependencies
     # where the dependency is cleaned up before a StreamingResponse
     # is complete.
@@ -497,11 +542,11 @@ async def create_chat_completion(
         )
 
     if body.grammar is not None:
-        kwargs["grammar"] = llama_cpp.LlamaGrammar.from_string(body.grammar)
+        kwargs["grammar"] = llama_cpp_python.LlamaGrammar.from_string(body.grammar)
 
     if body.min_tokens > 0:
-        _min_tokens_logits_processor = llama_cpp.LogitsProcessorList(
-            [llama_cpp.MinTokensLogitsProcessor(body.min_tokens, llama.token_eos())]
+        _min_tokens_logits_processor = llama_cpp_python.LogitsProcessorList(
+            [llama_cpp_python.MinTokensLogitsProcessor(body.min_tokens, llama.token_eos())]
         )
         if "logits_processor" not in kwargs:
             kwargs["logits_processor"] = _min_tokens_logits_processor
@@ -509,7 +554,7 @@ async def create_chat_completion(
             kwargs["logits_processor"].extend(_min_tokens_logits_processor)
 
     iterator_or_completion: Union[
-        llama_cpp.ChatCompletion, Iterator[llama_cpp.ChatCompletionChunk]
+        llama_cpp_python.ChatCompletion, Iterator[llama_cpp_python.ChatCompletionChunk]
     ] = await run_in_threadpool(llama.create_chat_completion, **kwargs)
 
     if isinstance(iterator_or_completion, Iterator):
@@ -518,7 +563,7 @@ async def create_chat_completion(
 
         # If no exception was raised from first_response, we can assume that
         # the iterator is valid and we can use it to stream the response.
-        def iterator() -> Iterator[llama_cpp.ChatCompletionChunk]:
+        def iterator() -> Iterator[llama_cpp_python.ChatCompletionChunk]:
             yield first_response
             yield from iterator_or_completion
             exit_stack.close()
@@ -610,3 +655,18 @@ async def detokenize(
     text = llama_proxy(body.model).detokenize(body.tokens).decode("utf-8")
 
     return DetokenizeInputResponse(text=text)
+
+
+@router.get(
+    '/v1/internal/model/info',
+    summary='Model info',
+    dependencies=[Depends(authenticate)],
+    tags=[openai_v1_tag],
+)
+async def info():
+    for model in _model_settings:
+        if _llama_proxy._current_model.model_path == model.model:
+            return {
+                "model_name": model.model_alias if model.model_alias is not None else model.model,
+                "lora_names": _llama_proxy._current_model.lora_path
+            }

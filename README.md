@@ -267,20 +267,20 @@ The high-level API provides a simple managed interface through the [`Llama`](htt
 Below is a short example demonstrating how to use the high-level API to for basic text completion:
 
 ```python
-from llama_cpp import Llama
+from llama_cpp_python import Llama
 
 llm = Llama(
-      model_path="./models/7B/llama-model.gguf",
-      # n_gpu_layers=-1, # Uncomment to use GPU acceleration
-      # seed=1337, # Uncomment to set a specific seed
-      # n_ctx=2048, # Uncomment to increase the context window
+    model_path="./models/7B/llama-model.gguf",
+    # n_gpu_layers=-1, # Uncomment to use GPU acceleration
+    # seed=1337, # Uncomment to set a specific seed
+    # n_ctx=2048, # Uncomment to increase the context window
 )
 output = llm(
-      "Q: Name the planets in the solar system? A: ", # Prompt
-      max_tokens=32, # Generate up to 32 tokens, set to None to generate up to the end of the context window
-      stop=["Q:", "\n"], # Stop generating just before the model would generate a new question
-      echo=True # Echo the prompt back in the output
-) # Generate a completion, can also call create_completion
+    "Q: Name the planets in the solar system? A: ",  # Prompt
+    max_tokens=32,  # Generate up to 32 tokens, set to None to generate up to the end of the context window
+    stop=["Q:", "\n"],  # Stop generating just before the model would generate a new question
+    echo=True  # Echo the prompt back in the output
+)  # Generate a completion, can also call create_completion
 print(output)
 ```
 
@@ -341,19 +341,20 @@ The model will will format the messages into a single prompt using the following
 Set `verbose=True` to see the selected chat format.
 
 ```python
-from llama_cpp import Llama
+from llama_cpp_python import Llama
+
 llm = Llama(
-      model_path="path/to/llama-2/llama-model.gguf",
-      chat_format="llama-2"
+    model_path="path/to/llama-2/llama-model.gguf",
+    chat_format="llama-2"
 )
 llm.create_chat_completion(
-      messages = [
-          {"role": "system", "content": "You are an assistant who perfectly describes images."},
-          {
-              "role": "user",
-              "content": "Describe this image in detail please."
-          }
-      ]
+    messages=[
+        {"role": "system", "content": "You are an assistant who perfectly describes images."},
+        {
+            "role": "user",
+            "content": "Describe this image in detail please."
+        }
+    ]
 )
 ```
 
@@ -371,7 +372,8 @@ To constrain chat responses to only valid JSON or a specific JSON Schema use the
 The following example will constrain the response to valid JSON strings only.
 
 ```python
-from llama_cpp import Llama
+from llama_cpp_python import Llama
+
 llm = Llama(model_path="path/to/model.gguf", chat_format="chatml")
 llm.create_chat_completion(
     messages=[
@@ -393,7 +395,8 @@ llm.create_chat_completion(
 To constrain the response further to a specific JSON Schema add the schema to the `schema` property of the `response_format` argument.
 
 ```python
-from llama_cpp import Llama
+from llama_cpp_python import Llama
+
 llm = Llama(model_path="path/to/model.gguf", chat_format="chatml")
 llm.create_chat_completion(
     messages=[
@@ -420,47 +423,48 @@ llm.create_chat_completion(
 The high-level API supports OpenAI compatible function and tool calling. This is possible through the `functionary` pre-trained models chat format or through the generic `chatml-function-calling` chat format.
 
 ```python
-from llama_cpp import Llama
+from llama_cpp_python import Llama
+
 llm = Llama(model_path="path/to/chatml/llama-model.gguf", chat_format="chatml-function-calling")
 llm.create_chat_completion(
-      messages = [
+    messages=[
         {
-          "role": "system",
-          "content": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. The assistant calls functions with appropriate input when necessary"
+            "role": "system",
+            "content": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. The assistant calls functions with appropriate input when necessary"
 
         },
         {
-          "role": "user",
-          "content": "Extract Jason is 25 years old"
+            "role": "user",
+            "content": "Extract Jason is 25 years old"
         }
-      ],
-      tools=[{
+    ],
+    tools=[{
         "type": "function",
         "function": {
-          "name": "UserDetail",
-          "parameters": {
-            "type": "object",
-            "title": "UserDetail",
-            "properties": {
-              "name": {
-                "title": "Name",
-                "type": "string"
-              },
-              "age": {
-                "title": "Age",
-                "type": "integer"
-              }
-            },
-            "required": [ "name", "age" ]
-          }
+            "name": "UserDetail",
+            "parameters": {
+                "type": "object",
+                "title": "UserDetail",
+                "properties": {
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "age": {
+                        "title": "Age",
+                        "type": "integer"
+                    }
+                },
+                "required": ["name", "age"]
+            }
         }
-      }],
-      tool_choice={
+    }],
+    tool_choice={
         "type": "function",
         "function": {
-          "name": "UserDetail"
+            "name": "UserDetail"
         }
-      }
+    }
 )
 ```
 
@@ -472,13 +476,14 @@ The various gguf-converted files for this set of models can be found [here](http
 Due to discrepancies between llama.cpp and HuggingFace's tokenizers, it is required to provide HF Tokenizer for functionary. The `LlamaHFTokenizer` class can be initialized and passed into the Llama class. This will override the default llama.cpp tokenizer used in Llama class. The tokenizer files are already included in the respective HF repositories hosting the gguf files.
 
 ```python
-from llama_cpp import Llama
-from llama_cpp.llama_tokenizer import LlamaHFTokenizer
+from llama_cpp_python import Llama
+from llama_cpp_python.llama_tokenizer import LlamaHFTokenizer
+
 llm = Llama.from_pretrained(
-  repo_id="meetkai/functionary-small-v2.2-GGUF",
-  filename="functionary-small-v2.2.q4_0.gguf",
-  chat_format="functionary-v2",
-  tokenizer=LlamaHFTokenizer.from_pretrained("meetkai/functionary-small-v2.2-GGUF")
+    repo_id="meetkai/functionary-small-v2.2-GGUF",
+    filename="functionary-small-v2.2.q4_0.gguf",
+    chat_format="functionary-v2",
+    tokenizer=LlamaHFTokenizer.from_pretrained("meetkai/functionary-small-v2.2-GGUF")
 )
 ```
 
@@ -503,22 +508,24 @@ Below are the supported multi-modal models and their respective chat handlers (P
 Then you'll need to use a custom chat handler to load the clip model and process the chat messages and images.
 
 ```python
-from llama_cpp import Llama
-from llama_cpp.llama_chat_format import Llava15ChatHandler
+from llama_cpp_python import Llama
+from llama_cpp_python.llama_chat_format import Llava15ChatHandler
+
 chat_handler = Llava15ChatHandler(clip_model_path="path/to/llava/mmproj.bin")
 llm = Llama(
-  model_path="./path/to/llava/llama-model.gguf",
-  chat_handler=chat_handler,
-  n_ctx=2048, # n_ctx should be increased to accommodate the image embedding
+    model_path="./path/to/llava/llama-model.gguf",
+    chat_handler=chat_handler,
+    n_ctx=2048,  # n_ctx should be increased to accommodate the image embedding
 )
 llm.create_chat_completion(
-    messages = [
+    messages=[
         {"role": "system", "content": "You are an assistant who perfectly describes images."},
         {
             "role": "user",
             "content": [
-                {"type" : "text", "text": "What's in this image?"},
-                {"type": "image_url", "image_url": {"url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg" } }
+                {"type": "text", "text": "What's in this image?"},
+                {"type": "image_url", "image_url": {
+                    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}}
             ]
         }
     ]
@@ -528,28 +535,29 @@ llm.create_chat_completion(
 You can also pull the model from the Hugging Face Hub using the `from_pretrained` method.
 
 ```python
-from llama_cpp import Llama
-from llama_cpp.llama_chat_format import MoondreamChatHandler
+from llama_cpp_python import Llama
+from llama_cpp_python.llama_chat_format import MoondreamChatHandler
 
 chat_handler = MoondreamChatHandler.from_pretrained(
-  repo_id="vikhyatk/moondream2",
-  filename="*mmproj*",
+    repo_id="vikhyatk/moondream2",
+    filename="*mmproj*",
 )
 
 llm = Llama.from_pretrained(
-  repo_id="vikhyatk/moondream2",
-  filename="*text-model*",
-  chat_handler=chat_handler,
-  n_ctx=2048, # n_ctx should be increased to accommodate the image embedding
+    repo_id="vikhyatk/moondream2",
+    filename="*text-model*",
+    chat_handler=chat_handler,
+    n_ctx=2048,  # n_ctx should be increased to accommodate the image embedding
 )
 
 response = llm.create_chat_completion(
-    messages = [
+    messages=[
         {
             "role": "user",
             "content": [
-                {"type" : "text", "text": "What's in this image?"},
-                {"type": "image_url", "image_url": {"url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg" } }
+                {"type": "text", "text": "What's in this image?"},
+                {"type": "image_url", "image_url": {
+                    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}}
 
             ]
         }
@@ -601,12 +609,13 @@ The fastest way to use speculative decoding is through the `LlamaPromptLookupDec
 Just pass this as a draft model to the `Llama` class during initialization.
 
 ```python
-from llama_cpp import Llama
-from llama_cpp.llama_speculative import LlamaPromptLookupDecoding
+from llama_cpp_python import Llama
+from llama_cpp_python.llama_speculative import LlamaPromptLookupDecoding
 
 llama = Llama(
     model_path="path/to/model.gguf",
-    draft_model=LlamaPromptLookupDecoding(num_pred_tokens=10) # num_pred_tokens is the number of tokens to predict 10 is the default and generally good for gpu, 2 performs better for cpu-only machines.
+    draft_model=LlamaPromptLookupDecoding(num_pred_tokens=10)
+    # num_pred_tokens is the number of tokens to predict 10 is the default and generally good for gpu, 2 performs better for cpu-only machines.
 )
 ```
 
@@ -615,9 +624,9 @@ llama = Llama(
 To generate text embeddings use [`create_embedding`](https://llama-cpp-python.readthedocs.io/en/latest/api-reference/#llama_cpp.Llama.create_embedding) or [`embed`](https://llama-cpp-python.readthedocs.io/en/latest/api-reference/#llama_cpp.Llama.embed). Note that you must pass `embedding=True` to the constructor upon model creation for these to work properly.
 
 ```python
-import llama_cpp
+import llama_cpp_python
 
-llm = llama_cpp.Llama(model_path="path/to/model.gguf", embedding=True)
+llm = llama_cpp_python.Llama(model_path="path/to/model.gguf", embedding=True)
 
 embeddings = llm.create_embedding("Hello, world!")
 
@@ -651,14 +660,14 @@ To install the server package and get started:
 
 ```bash
 pip install 'llama-cpp-python[server]'
-python3 -m llama_cpp.server --model models/7B/llama-model.gguf
+python3 -m llama_cpp_python.server --model models/7B/llama-model.gguf
 ```
 
 Similar to Hardware Acceleration section above, you can also install with GPU (cuBLAS) support like this:
 
 ```bash
 CMAKE_ARGS="-DGGML_CUDA=on" FORCE_CMAKE=1 pip install 'llama-cpp-python[server]'
-python3 -m llama_cpp.server --model models/7B/llama-model.gguf --n_gpu_layers 35
+python3 -m llama_cpp_python.server --model models/7B/llama-model.gguf --n_gpu_layers 35
 ```
 
 Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) to see the OpenAPI documentation.
@@ -669,16 +678,16 @@ Similarly, to change the port (default is 8000), use `--port`.
 You probably also want to set the prompt format. For chatml, use
 
 ```bash
-python3 -m llama_cpp.server --model models/7B/llama-model.gguf --chat_format chatml
+python3 -m llama_cpp_python.server --model models/7B/llama-model.gguf --chat_format chatml
 ```
 
 That will format the prompt according to how model expects it. You can find the prompt format in the model card.
-For possible options, see [llama_cpp/llama_chat_format.py](llama_cpp/llama_chat_format.py) and look for lines starting with "@register_chat_format".
+For possible options, see [llama_cpp/llama_chat_format.py](llama_cpp_python/llama_chat_format.py) and look for lines starting with "@register_chat_format".
 
 If you have `huggingface-hub` installed, you can also use the `--hf_model_repo_id` flag to load a model from the Hugging Face Hub.
 
 ```bash
-python3 -m llama_cpp.server --hf_model_repo_id Qwen/Qwen2-0.5B-Instruct-GGUF --model '*q8_0.gguf'
+python3 -m llama_cpp_python.server --hf_model_repo_id Qwen/Qwen2-0.5B-Instruct-GGUF --model '*q8_0.gguf'
 ```
 
 ### Web Server Features
@@ -708,18 +717,20 @@ The entire low-level API can be found in [llama_cpp/llama_cpp.py](https://github
 Below is a short example demonstrating how to use the low-level API to tokenize a prompt:
 
 ```python
-import llama_cpp
+import llama_cpp_python
 import ctypes
-llama_cpp.llama_backend_init(False) # Must be called once at the start of each program
-params = llama_cpp.llama_context_default_params()
+
+llama_cpp_python.llama_backend_init(False)  # Must be called once at the start of each program
+params = llama_cpp_python.llama_context_default_params()
 # use bytes for char * params
-model = llama_cpp.llama_load_model_from_file(b"./models/7b/llama-model.gguf", params)
-ctx = llama_cpp.llama_new_context_with_model(model, params)
+model = llama_cpp_python.llama_load_model_from_file(b"./models/7b/llama-model.gguf", params)
+ctx = llama_cpp_python.llama_new_context_with_model(model, params)
 max_tokens = params.n_ctx
 # use ctypes arrays for array params
-tokens = (llama_cpp.llama_token * int(max_tokens))()
-n_tokens = llama_cpp.llama_tokenize(ctx, b"Q: Name the planets in the solar system? A: ", tokens, max_tokens, llama_cpp.c_bool(True))
-llama_cpp.llama_free(ctx)
+tokens = (llama_cpp_python.llama_token * int(max_tokens))()
+n_tokens = llama_cpp_python.llama_tokenize(ctx, b"Q: Name the planets in the solar system? A: ", tokens, max_tokens,
+                                           llama_cpp_python.c_bool(True))
+llama_cpp_python.llama_free(ctx)
 ```
 
 Check out the [examples folder](examples/low_level_api) for more examples of using the low-level API.

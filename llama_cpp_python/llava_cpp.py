@@ -29,7 +29,7 @@ from typing import (
 )
 from typing_extensions import TypeAlias
 
-import llama_cpp.llama_cpp as llama_cpp
+import llama_cpp_python.llama_cpp as llama_cpp
 
 
 # Load the library

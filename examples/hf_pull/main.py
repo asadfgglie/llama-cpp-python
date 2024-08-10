@@ -1,11 +1,11 @@
-import llama_cpp
-import llama_cpp.llama_tokenizer
+import llama_cpp_python
+import llama_cpp_python.llama_tokenizer
 
 
-llama = llama_cpp.Llama.from_pretrained(
+llama = llama_cpp_python.Llama.from_pretrained(
     repo_id="Qwen/Qwen1.5-0.5B-Chat-GGUF",
     filename="*q8_0.gguf",
-    tokenizer=llama_cpp.llama_tokenizer.LlamaHFTokenizer.from_pretrained(
+    tokenizer=llama_cpp_python.llama_tokenizer.LlamaHFTokenizer.from_pretrained(
         "Qwen/Qwen1.5-0.5B"
     ),
     verbose=False,
