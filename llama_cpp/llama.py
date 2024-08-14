@@ -408,15 +408,24 @@ class Llama:
             )
         )
 
+        self._lora_adapter: Optional[llama_cpp.llama_lora_adapter_p] = None
+
         if self.lora_path:
-            if self._model.apply_lora_from_file(
-                self.lora_path,
-                self.lora_scale,
-                self.lora_base,
-                self.n_threads,
+            assert self._model.model is not None
+            self._lora_adapter = llama_cpp.llama_lora_adapter_init(
+                self._model.model,
+                self.lora_path.encode("utf-8"),
+            )
+            if self._lora_adapter is None:
+                raise RuntimeError(
+                    f"Failed to initialize LoRA adapter from lora path: {self.lora_path}"
+                )
+            assert self._ctx.ctx is not None
+            if llama_cpp.llama_lora_adapter_set(
+                self._ctx.ctx, self._lora_adapter, self.lora_scale
             ):
                 raise RuntimeError(
-                    f"Failed to apply LoRA from lora path: {self.lora_path} to base path: {self.lora_base}"
+                    f"Failed to set LoRA adapter from lora path: {self.lora_path}"
                 )
 
         if self.verbose:
@@ -649,7 +658,7 @@ class Llama:
         min_p: float = 0.05,
         typical_p: float = 1.0,
         temp: float = 0.80,
-        repeat_penalty: float = 1.1,
+        repeat_penalty: float = 1.0,
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
         tfs_z: float = 1.0,
@@ -724,7 +733,7 @@ class Llama:
         min_p: float = 0.05,
         typical_p: float = 1.0,
         temp: float = 0.80,
-        repeat_penalty: float = 1.1,
+        repeat_penalty: float = 1.0,
         reset: bool = True,
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
@@ -742,7 +751,7 @@ class Llama:
         Examples:
             >>> llama = Llama("models/ggml-7b.bin")
             >>> tokens = llama.tokenize(b"Hello, world!")
-            >>> for token in llama.generate(tokens, top_k=40, top_p=0.95, temp=1.0, repeat_penalty=1.1):
+            >>> for token in llama.generate(tokens, top_k=40, top_p=0.95, temp=1.0, repeat_penalty=1.0):
             ...     print(llama.detokenize([token]))
 
         Args:
@@ -768,11 +777,12 @@ class Llama:
                 else:
                     break
             if longest_prefix > 0:
-                if self.verbose:
-                    print("Llama.generate: prefix-match hit", file=sys.stderr)
                 reset = False
                 tokens = tokens[longest_prefix:]
                 self.n_tokens = longest_prefix
+                if self.verbose:
+                    print(f"Llama.generate: {longest_prefix} prefix-match hit, "
+                          f"remaining {len(tokens)} prompt tokens to eval", file=sys.stderr)                    
 
         # Reset the model state
         if reset:
@@ -1011,7 +1021,7 @@ class Llama:
         stop: Optional[Union[str, List[str]]] = [],
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
-        repeat_penalty: float = 1.1,
+        repeat_penalty: float = 1.0,
         top_k: int = 40,
         stream: bool = False,
         seed: Optional[int] = None,
@@ -1513,7 +1523,8 @@ class Llama:
                 if self.verbose:
                     print("Llama._create_completion: cache save", file=sys.stderr)
                 self.cache[prompt_tokens + completion_tokens] = self.save_state()
-                print("Llama._create_completion: cache saved", file=sys.stderr)
+                if self.verbose:
+                    print("Llama._create_completion: cache saved", file=sys.stderr)
             return
 
         if self.cache:
@@ -1630,7 +1641,7 @@ class Llama:
         stop: Optional[Union[str, List[str]]] = [],
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
-        repeat_penalty: float = 1.1,
+        repeat_penalty: float = 1.0,
         top_k: int = 40,
         stream: bool = False,
         seed: Optional[int] = None,
@@ -1727,7 +1738,7 @@ class Llama:
         stop: Optional[Union[str, List[str]]] = [],
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
-        repeat_penalty: float = 1.1,
+        repeat_penalty: float = 1.0,
         top_k: int = 40,
         stream: bool = False,
         seed: Optional[int] = None,
@@ -1824,7 +1835,7 @@ class Llama:
         max_tokens: Optional[int] = None,
         presence_penalty: float = 0.0,
         frequency_penalty: float = 0.0,
-        repeat_penalty: float = 1.1,
+        repeat_penalty: float = 1.0,
         tfs_z: float = 1.0,
         mirostat_mode: int = 0,
         mirostat_tau: float = 5.0,
@@ -2074,9 +2085,14 @@ class Llama:
 
     def close(self) -> None:
         """Explicitly free the model from memory."""
-        self._stack.close()
+        if hasattr(self,'_stack'):
+            if self._stack is not None:
+                self._stack.close()
 
     def __del__(self) -> None:
+        if hasattr(self,'_lora_adapter'):
+            if self._lora_adapter is not None:
+                llama_cpp.llama_lora_adapter_free(self._lora_adapter)
         self.close()
 
     @staticmethod
@@ -2145,7 +2161,7 @@ class Llama:
 
         files = [
             file["name"] if isinstance(file, dict) else file
-            for file in hffs.ls(repo_id)
+            for file in hffs.ls(repo_id, recursive=True)
         ]
 
         # split each file into repo_id, subfolder, filename
