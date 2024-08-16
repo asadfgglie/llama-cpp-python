@@ -11,7 +11,6 @@ from typing import Iterator, List, Optional, Union, Dict
 
 import anyio
 import numpy as np
-import torch.cuda
 from anyio.streams.memory import MemoryObjectSendStream
 from fastapi import Depends, FastAPI, APIRouter, Request, HTTPException, status, Body
 from fastapi.middleware import Middleware
