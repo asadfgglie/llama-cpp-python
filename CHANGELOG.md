@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1]
+
+- feat: Update llama.cpp to ggerganov/llama.cpp@c919d5db39c8a7fcb64737f008e4b105ee0acd20
+- feat: Expose libggml in internal APIs by @abetlen in #1761
+- fix: Fix speculative decoding by @abetlen in 9992c5084a3df2f533e265d10f81d4269b97a1e6 and e975dabf74b3ad85689c9a07719cbb181313139b
+- misc: Rename all_text to remaining_text by @xu-song in #1658
+
+## [0.3.0]
+
+- feat: Update llama.cpp to ggerganov/llama.cpp@ea9c32be71b91b42ecc538bd902e93cbb5fb36cb
+- feat: Enable detokenizing special tokens with special=True by @benniekiss in #1596
+- feat(ci): Speed up CI workflows using uv, add support for CUDA 12.5 wheels by @Smartappli in e529940f45d42ed8aa31334123b8d66bc67b0e78
+- feat: Add loading sharded GGUF files from HuggingFace with Llama.from_pretrained(additional_files=[...]) by @Gnurro in 84c092063e8f222758dd3d60bdb2d1d342ac292e
+- feat: Add option to configure n_ubatch by @abetlen in 6c44a3f36b089239cb6396bb408116aad262c702
+- feat: Update sampling API for llama.cpp. Sampling now uses sampler chain by @abetlen in f8fcb3ea3424bcfba3a5437626a994771a02324b
+- fix: Don't store scores internally unless logits_all=True. Reduces memory requirements for large context by @abetlen in 29afcfdff5e75d7df4c13bad0122c98661d251ab
+- fix: Fix memory allocation of ndarray in by @xu-song in #1704
+- fix: Use system message in og qwen format by @abetlen in 98eb092d3c6e7c142c4ba2faaca6c091718abbb3
+
+
+## [0.2.90]
+
+- feat: Update llama.cpp to ggerganov/llama.cpp@1d1ccce67613674c75c9c7e3fa4c1e24e428ba48
+- feat: Add support for `MiniCPMv26ChatHandler` and `minicpm-v-26` in server by @abetlen in f70df824985d875226793b94dacc0c302a4256b2
+
+## [0.2.89]
+
+- feat: Update llama.cpp to ggerganov/llama.cpp@cfac111e2b3953cdb6b0126e67a2487687646971
+- fix: Llama.close didn't free lora adapter by @jkawamoto in #1679
+- fix: missing dependencies for test by @jkawamoto in #1680
+
 ## [0.2.88]
 
 - feat: Update llama.cpp to ggerganov/llama.cpp@fc4ca27b25464a11b3b86c9dbb5b6ed6065965c2

@@ -1,6 +1,7 @@
 """Python implementation of llama grammar parser directly translated from C++ source file in vendor/llama.cpp/common/grammar-parser.cpp."""
 
 # flake8: noqa
+from pathlib import Path
 import sys
 import ctypes
 import enum
@@ -829,69 +830,34 @@ def print_grammar(file: typing.TextIO, state: ParseState) -> None:
     except Exception as err:
         print(f"\nerror printing grammar: {err}", file=file)
         raise err
+LLAMA_GRAMMAR_DEFAULT_ROOT = "root"
 
 
 class LlamaGrammar:
-    def __init__(self, parse_state: ParseState):
-        self.parse_state = parse_state
-
-        self._grammar_rules = parse_state.rules
-        self._n_rules = len(self._grammar_rules)
-        self._start_rule_index = parse_state.symbol_ids["root"]
-
-        self._element_lists = [
-            [
-                llama_cpp.llama_grammar_element(ctypes.c_int(elem.type), ctypes.c_uint32(elem.value))
-                for elem in subvector
-            ]
-            for subvector in self._grammar_rules
-        ]
-
-        # Step 2: Convert each list to llama_grammar_element array and get pointer
-        self._element_arrays = [
-            (llama_cpp.llama_grammar_element * len(sublist))(*sublist)
-            for sublist in self._element_lists
-        ]
-
-        # Step 3: Get pointer of each array
-        self._element_array_pointers = [
-            ctypes.cast(subarray, llama_cpp.llama_grammar_element_p) for subarray in self._element_arrays
-        ]
-
-        # Step 4: Make array of these pointers and get its pointer
-        self._rules = (llama_cpp.llama_grammar_element_p * len(self._element_array_pointers))(
-            *self._element_array_pointers
-        )
-
-        self.grammar = None
-        self._init_grammar()
-
-
-    def _init_grammar(self):
-        grammar = llama_cpp.llama_grammar_init(
-            self._rules, ctypes.c_size_t(self._n_rules), ctypes.c_size_t(self._start_rule_index)
-        )
-
-        if grammar is None:
-            raise ValueError("Failed to create grammar")
-
-        self.grammar = grammar
-
-    def __del__(self):
-        if self.grammar is not None:
-            llama_cpp.llama_grammar_free(self.grammar)
-            self.grammar = None
-
-    def reset(self):
-        if self.grammar is not None:
-            llama_cpp.llama_grammar_free(self.grammar)
-        self._init_grammar()
+    def __init__(self, *args, _grammar: str, **kwargs):
+        self._grammar = _grammar
+        self._root = LLAMA_GRAMMAR_DEFAULT_ROOT
 
     @classmethod
     def from_string(cls, grammar: str, verbose: bool = True) -> "LlamaGrammar":
-        parsed_grammar = parse(grammar)
-        print_grammar(file=sys.stdout, state=parsed_grammar)
-        return cls(parsed_grammar)
+        return cls(_grammar=grammar)
+
+    @classmethod
+    def from_file(cls, file: Union[str, Path], verbose: bool = True) -> "LlamaGrammar":
+        try:
+            with open(file) as f:
+                grammar = f.read()
+        except Exception as err:
+            raise Exception(
+                f"{cls.from_file.__name__}: error reading grammar file: {err}"
+            )
+
+        if grammar:
+            return cls.from_string(grammar, verbose=verbose)
+
+        raise ValueError(
+            f"{cls.from_file.__name__}: error parsing grammar file: params_grammer is empty"
+        )
 
     @classmethod
     def from_json_schema(cls, json_schema: str, verbose: bool = True) -> "LlamaGrammar":
