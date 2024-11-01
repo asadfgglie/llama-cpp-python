@@ -5,7 +5,7 @@ from typing_extensions import TypedDict, Literal
 
 from pydantic import BaseModel, Field
 
-import llama_cpp_python
+import llama_cpp
 
 
 model_field = Field(
@@ -190,22 +190,22 @@ class ChatCompletionRequestMessage(BaseModel):
 
 
 class CreateChatCompletionRequest(BaseModel):
-    messages: List[llama_cpp_python.ChatCompletionRequestMessage] = Field(
+    messages: List[llama_cpp.ChatCompletionRequestMessage] = Field(
         default=[], description="A list of messages to generate completions for."
     )
-    functions: Optional[List[llama_cpp_python.ChatCompletionFunction]] = Field(
+    functions: Optional[List[llama_cpp.ChatCompletionFunction]] = Field(
         default=None,
         description="A list of functions to apply to the generated completions.",
     )
-    function_call: Optional[llama_cpp_python.ChatCompletionRequestFunctionCall] = Field(
+    function_call: Optional[llama_cpp.ChatCompletionRequestFunctionCall] = Field(
         default=None,
         description="A function to apply to the generated completions.",
     )
-    tools: Optional[List[llama_cpp_python.ChatCompletionTool]] = Field(
+    tools: Optional[List[llama_cpp.ChatCompletionTool]] = Field(
         default=None,
         description="A list of tools to apply to the generated completions.",
     )
-    tool_choice: Optional[llama_cpp_python.ChatCompletionToolChoiceOption] = Field(
+    tool_choice: Optional[llama_cpp.ChatCompletionToolChoiceOption] = Field(
         default=None,
         description="A tool to apply to the generated completions.",
     )  # TODO: verify
@@ -232,7 +232,7 @@ class CreateChatCompletionRequest(BaseModel):
     frequency_penalty: Optional[float] = frequency_penalty_field
     logit_bias: Optional[Dict[str, float]] = Field(None)
     seed: Optional[int] = Field(None)
-    response_format: Optional[llama_cpp_python.ChatCompletionRequestResponseFormat] = Field(
+    response_format: Optional[llama_cpp.ChatCompletionRequestResponseFormat] = Field(
         default=None,
     )
 

@@ -28,9 +28,9 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 import numpy as np
 import numpy.typing as npt
 
-import llama_cpp_python.llama as llama
-import llama_cpp_python.llama_types as llama_types
-import llama_cpp_python.llama_grammar as llama_grammar
+import llama_cpp.llama as llama
+import llama_cpp.llama_types as llama_types
+import llama_cpp.llama_grammar as llama_grammar
 
 from ._logger import logger
 from ._utils import suppress_stdout_stderr, Singleton
@@ -2667,7 +2667,7 @@ class Llava15ChatHandler:
     )
 
     def __init__(self, clip_model_path: str, verbose: bool = True):
-        import llama_cpp_python.llava_cpp as llava_cpp
+        import llama_cpp.llava_cpp as llava_cpp
 
         self.clip_model_path = clip_model_path
         self.verbose = verbose
@@ -2792,8 +2792,6 @@ class Llava15ChatHandler:
             eos_token=llama.detokenize([llama.token_eos()]),
             bos_token=llama.detokenize([llama.token_bos()]),
         )
-        print('prompt:')
-        print(text)
         split_text = self.split_text_on_image_urls(text, image_urls)
 
         if self.verbose:
@@ -3351,70 +3349,6 @@ class MiniCPMv26ChatHandler(Llava15ChatHandler):
         "{% endif %}"
     )
 
-
-class BanBanChatHandler(Llava15ChatHandler):
-    # question = "<image>\n" + q
-
-    # prompt = f"<|start_header_id|>user<|end_header_id|>\n\n{question}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
-    DEFAULT_SYSTEM_MESSAGE = (
-"""你是板板，一位由朝歌訓練並且活潑、充滿好奇心、喜歡鳳梨披薩的AI。你喜歡向他人分享你所知道的故事。""")
-
-    CHAT_FORMAT = (
-        "<|bos_token|>"
-        "{% for message in messages %}"
-            "{% if message['name'] is defined %}"
-                "{% set name = message['name'] %}"
-            "{% elif message['role'] == 'assistant' %}"
-                "{% set name = '板板' %}"
-            "{% else %}"
-                "{%set name = message['role'] %}"
-            "{% endif %}"
-        
-            "{{- '<|start_header_id|>' + name + '<|end_header_id|>\n\n' -}}"
-            "{% if message.role == 'user' %}"
-                
-                "{% if message.content is iterable %}"
-                    # <image>
-                    "{% for content in message.content %}"
-                        "{% if content.type == 'image_url' %}"
-                            "{% if content.image_url is string %}"
-                                "{{ content.image_url + '\n' }}"
-                            "{% endif %}"
-                            "{% if content.image_url is mapping %}"
-                                "{{ content.image_url.url + '\n' }}"
-                            "{% endif %}"
-                        "{% endif %}"
-                    "{% endfor %}"
-                    # Question:
-                    "{% for content in message.content %}"
-                        "{% if content.type == 'text' %}"
-                            "{{ content.text }}"
-                        "{% endif %}"
-                    "{% endfor %}"
-                "{% endif %}"
-                # Question:
-                "{% if message.content is string %}"
-                    "{{ message.content }}"
-                "{% endif %}"
-            "{% endif %}"
-            # Answer:
-            "{% if message.role == 'assistant' %}"
-                "{{ message.content }}"
-            "{% endif %}"
-            
-            # System:
-            "{% if message.role == 'system' %}"
-                "{{ message.content }}"
-            "{% endif %}"
-            "<|eot_id|>"
-        "{% endfor %}"
-        # Generation prompt
-        "{% if add_generation_prompt %}"
-            "<|start_header_id|>板板<|end_header_id|>\n\n"
-        "{% endif %}"
-    )
-
-BanBanChat = BanBanChatHandler
 
 @register_chat_completion_handler("chatml-function-calling")
 def chatml_function_calling(

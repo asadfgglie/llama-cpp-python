@@ -20,7 +20,7 @@ from typing import (
     TYPE_CHECKING,
 )
 
-import llama_cpp_python.llama_cpp as llama_cpp
+import llama_cpp.llama_cpp as llama_cpp
 
 from llama_cpp._ctypes_extensions import (
     load_shared_library,

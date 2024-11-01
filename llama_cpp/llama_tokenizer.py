@@ -7,8 +7,8 @@ from typing import (
     Any,
 )
 
-import llama_cpp_python
-from llama_cpp_python.llama_types import List
+import llama_cpp
+from llama_cpp.llama_types import List
 
 
 class BaseLlamaTokenizer(abc.ABC):
@@ -43,7 +43,7 @@ class BaseLlamaTokenizer(abc.ABC):
 
 
 class LlamaTokenizer(BaseLlamaTokenizer):
-    def __init__(self, llama: llama_cpp_python.Llama):
+    def __init__(self, llama: llama_cpp.Llama):
         self._model = llama._model  # type: ignore
 
     def tokenize(
@@ -71,7 +71,7 @@ class LlamaTokenizer(BaseLlamaTokenizer):
 
     @classmethod
     def from_ggml_file(cls, path: str) -> "LlamaTokenizer":
-        return cls(llama_cpp_python.Llama(model_path=path, vocab_only=True))
+        return cls(llama_cpp.Llama(model_path=path, vocab_only=True))
 
 
 class LlamaHFTokenizer(BaseLlamaTokenizer):

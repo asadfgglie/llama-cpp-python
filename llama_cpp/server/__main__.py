@@ -9,13 +9,13 @@ export MODEL=../models/7B/...
 
 Then run:
 ```
-uvicorn llama_cpp_python.server.app:create_app --reload
+uvicorn llama_cpp.server.app:create_app --reload
 ```
 
 or
 
 ```
-python3 -m llama_cpp_python.server
+python3 -m llama_cpp.server
 ```
 
 Then visit http://localhost:8000/docs to see the interactive API docs.
@@ -30,14 +30,14 @@ import argparse
 
 import uvicorn
 
-from llama_cpp_python.server.app import create_app
-from llama_cpp_python.server.settings import (
+from llama_cpp.server.app import create_app
+from llama_cpp.server.settings import (
     Settings,
     ServerSettings,
     ModelSettings,
     ConfigFileSettings,
 )
-from llama_cpp_python.server.cli import add_args_from_model, parse_model_from_args
+from llama_cpp.server.cli import add_args_from_model, parse_model_from_args
 
 
 def main():
